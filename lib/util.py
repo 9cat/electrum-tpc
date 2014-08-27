@@ -43,13 +43,13 @@ def print_json(obj):
 
 def user_dir():
     if "HOME" in os.environ:
-        return os.path.join(os.environ["HOME"], ".electrum-ltc")
+        return os.path.join(os.environ["HOME"], ".electrum-tpc")
     elif "APPDATA" in os.environ:
-        return os.path.join(os.environ["APPDATA"], "Electrum-LTC")
+        return os.path.join(os.environ["APPDATA"], "Electrum-TPC")
     elif "LOCALAPPDATA" in os.environ:
-        return os.path.join(os.environ["LOCALAPPDATA"], "Electrum-LTC")
+        return os.path.join(os.environ["LOCALAPPDATA"], "Electrum-TPC")
     elif 'ANDROID_DATA' in os.environ:
-        return "/sdcard/electrum-ltc/"
+        return "/sdcard/electrum-tpc/"
     else:
         #raise Exception("No home directory found in environment variables.")
         return
