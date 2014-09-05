@@ -1,5 +1,5 @@
 import threading, time, Queue, os, sys, shutil, random
-from util import user_dir, appdata_dir, print_error, print_msg
+from util import user_dir, appdata_dir, print_msg, print_msg
 from bitcoin import *
 import interface
 from blockchain import Blockchain
@@ -253,7 +253,7 @@ class Network(threading.Thread):
     def switch_to_interface(self, interface):
         assert not self.interface.is_connected
         server = interface.server
-        print_error("switching to", server)
+        print_msg("switching to", server)
         self.interface = interface
         h =  self.heights.get(server)
         if h:
@@ -307,11 +307,11 @@ class Network(threading.Thread):
             if h:
                 self.server_lag = blockchain_height - h
                 if self.server_lag > 1:
-                    print_error( "Server is lagging", blockchain_height, h)
+                    print_msg( "Server is lagging", blockchain_height, h)
                     if self.config.get('auto_cycle'):
                         self.set_server(i.server)
             else:
-                print_error('no height for main interface')
+                print_msg('no height for main interface')
         
         self.trigger_callback('updated')
 
@@ -339,7 +339,7 @@ class Network(threading.Thread):
                 self.add_recent_server(i)
                 i.send([ ('blockchain.headers.subscribe',[])], self.on_header)
                 if i == self.interface:
-                    print_error('sending subscriptions to', self.interface.server)
+                    print_msg('sending subscriptions to', self.interface.server)
                     self.send_subscriptions()
                     self.trigger_callback('connected')
             else:
@@ -369,7 +369,7 @@ class Network(threading.Thread):
         if i == self.interface:
             self.server_lag = self.blockchain.height() - height
             if self.server_lag > 1 and self.config.get('auto_cycle'):
-                print_error( "Server lagging, stopping interface")
+                print_msg( "Server lagging, stopping interface")
                 self.stop_interface()
 
             self.trigger_callback('updated')
