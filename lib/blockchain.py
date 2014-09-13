@@ -123,7 +123,7 @@ class Blockchain(threading.Thread):
             height = header.get('block_height')
 
             prev_hash = self.hash_header(prev_header)
-            bits, target = self.get_target(height/2016, chain)
+            bits, target = self.get_target(height/201, chain)
             _hash = self.pow_hash_header(header)
 			
 			
@@ -285,6 +285,7 @@ class Blockchain(threading.Thread):
         return c + MM * i				
 				
     def get_target(self, index, chain=[],data=None):
+        print ("index=>", index,"chain=[]=>",chain,"data=>",data)
         max_target = 0x00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         if index == 0: return 0x1e0ffff0, 0x00000FFFF0000000000000000000000000000000000000000000000000000000
         global Kimoto_vals
