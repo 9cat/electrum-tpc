@@ -1102,7 +1102,7 @@ class ElectrumWindow(QMainWindow):
         menu = QMenu()
         if not multi_select:
             menu.addAction(_("Copy to clipboard"), lambda: self.app.clipboard().setText(addr))
-            menu.addAction(_("QR code"), lambda: self.show_qrcode("litecoin:" + addr, _("Address")) )
+            menu.addAction(_("QR code"), lambda: self.show_qrcode("templecoin:" + addr, _("Address")) )
             menu.addAction(_("Edit label"), lambda: self.edit_label(True))
             menu.addAction(_("Public keys"), lambda: self.show_public_keys(addr))
             if not self.wallet.is_watching_only():

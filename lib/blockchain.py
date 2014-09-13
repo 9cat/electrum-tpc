@@ -16,8 +16,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-
+from decimal import Decimal
 import threading, time, Queue, os, sys, shutil
+from math import pow as dec_pow
 from util import user_dir, appdata_dir, print_msg, print_msg
 from bitcoin import *
 
@@ -27,6 +28,9 @@ except ImportError:
     print_msg("Warning: ltc_scrypt not available, using fallback")
     from scrypt import scrypt_1024_1_1_80 as getPoWHash
 
+KGW_headers = [{} for x in xrange(201)]
+Kimoto_vals = [1 + (0.7084 * dec_pow((Decimal(x+1)/Decimal(30)), -1.228)) for x in xrange(201)]
+	
 
 class Blockchain(threading.Thread):
 
@@ -130,8 +134,8 @@ class Blockchain(threading.Thread):
 
             try:
                 assert prev_hash == header.get('prev_block_hash')
-                #assert bits == header.get('bits')
-                #assert int('0x'+_hash,16) < target
+                assert bits == header.get('bits')
+                assert int('0x'+_hash,16) < target
             except Exception:
                 return False
 
@@ -259,55 +263,138 @@ class Blockchain(threading.Thread):
                 h = self.header_from_string(h)
                 return h 
 
-
-    def get_target(self, index, chain=[]):
-        max_target = 0x00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-        if index == 0: return 0x1e0ffff0, 0x00000FFFF0000000000000000000000000000000000000000000000000000000
-        print_msg( "get_target index:", index )
-
-        # Litecoin: go back the full period unless it's the first retarget
-        if index == 1:
-            first = self.read_header(0)
-        else:
-            first = self.read_header((index-1)*2016-1)
-        last = self.read_header(index*2016-1)
-        if last is None:
-            for h in chain:
-                if h.get('block_height') == index*2016-1:
-                    last = h
- 
-        nActualTimespan = last.get('timestamp') - first.get('timestamp')
-        nTargetTimespan = 84*60*60
-        nActualTimespan = max(nActualTimespan, nTargetTimespan/4)
-        nActualTimespan = min(nActualTimespan, nTargetTimespan*4)
-
-        bits = last.get('bits') 
+				
+    def convbignum(self, bits):
         # convert to bignum
-        MM = 256*256*256
-        a = bits%MM
-        if a < 0x8000:
-            a *= 256
-        target = (a) * pow(2, 8 * (bits/MM - 3))
+        return  (bits & 0xffffff) *(1<<( 8 * ((bits>>24) - 3)))
 
-        # new target
-        new_target = min( max_target, (target * nActualTimespan)/nTargetTimespan )
-        
+    def convbits(self, target):
         # convert it to bits
-        c = ("%064X"%new_target)[2:]
+        MM = 256*256*256
+        c = ("%064X"%target)[2:]
         i = 31
         while c[0:2]=="00":
             c = c[2:]
             i -= 1
 
         c = int('0x'+c[0:6],16)
-        if c >= 0x800000: 
+        if c >= 0x800000:
             c /= 256
             i += 1
 
-        new_bits = c + MM * i
+        return c + MM * i				
+				
+    def get_target(self, index, chain=[],data=None):
+        max_target = 0x00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        if index == 0: return 0x1e0ffff0, 0x00000FFFF0000000000000000000000000000000000000000000000000000000
+        global Kimoto_vals
+        k_vals = Kimoto_vals
+
+        KGW = False
+        global KGW_headers
+        if index >= 6000:
+            KGW = True
+
+        minKGWblocks = 15
+        maxKGWblocks = 201
+
+
+        if KGW and data or chain:
+            m= index % 201
+            if chain:
+                m = 0
+
+            try:
+                if m > 0:
+                    raw_l_header = data[(m-1)*80:(m)*80]
+                    last = self.header_from_string(raw_l_header)
+                    print_msg("last=", last)
+                    ts = last.get('timestamp')
+                    t = self.convbignum(last.get('bits'))
+                    KGW_headers[(index-1)%201] = {'header':last,'t':t, 'ts':ts}
+                else:
+                    last = self.read_header(index-1)
+                    print_msg("last=", last )
+                    t = self.convbignum(last.get('bits'))
+                    print_msg(" t = self.convbignum(last.get('bits'))=", t )					
+                    ts = last.get('timestamp')
+                    KGW_headers[(index-1)%201] = {'header':last,'t':t, 'ts':ts}
+            except Exception:
+                for h in chain:
+                    if h.get('block_height') == index-1:
+                        last = h
+                        ts = last.get('timestamp')
+                        t = self.convbignum(last.get('bits'))
+                        KGW_headers[(index-1)%201] = {'header':last,'t':t,'ts':ts}
+
+            for i in xrange(1,maxKGWblocks+1):
+                blockMass = i
+                KGW_i = index%201 - i
+                if KGW_i < 0:
+                    KGW_i = 201 + KGW_i
+                if 'header' not in KGW_headers[KGW_i] and blockMass != 1:
+                    if (m-i) >= 0:
+                        raw_f_header = data[(m-i)*80:(m-i+1)*80]
+                        first = self.header_from_string(raw_f_header)
+                    else:
+                        first = self.read_header(index-i)
+                    t = self.convbignum(first.get('bits'))
+                    ts = first.get('timestamp')
+                    KGW_headers[KGW_i] = {'header':first,'t':t, 'ts':ts}
+                first = KGW_headers[KGW_i]
+
+                if blockMass == 1:
+                    print first
+                    pastDiffAvg = first['t']
+                else:
+                    pastDiffAvg = (first['t'] - pastDiffAvgPrev)/Decimal(blockMass) + pastDiffAvgPrev
+                pastDiffAvgPrev = pastDiffAvg
+
+                if blockMass >= minKGWblocks:
+                    pastTimeActual = KGW_headers[(index-1)%201]['ts'] - first['ts']
+                    pastTimeTarget = 15*blockMass
+                    if pastTimeActual < 0:
+                        pastTimeActual = 0
+                    pastRateAdjRatio = 1.0
+                    if pastTimeActual != 0 and pastTimeTarget != 0:
+                        pastRateAdjRatio = Decimal(pastTimeTarget)/Decimal(pastTimeActual)
+                    eventHorizon = k_vals[(blockMass-1)]
+                    eventHorizonFast = eventHorizon
+                    eventHorizonSlow = 1/Decimal(eventHorizon)
+                    if pastRateAdjRatio <= eventHorizonSlow or pastRateAdjRatio >= eventHorizonFast:
+                        print_msg('blockMass: ', blockMass, 'adjratio: ', pastRateAdjRatio, ' eventHorizon: ', eventHorizon)
+                        first = first['header']
+                        break
+                    elif blockMass == maxKGWblocks:
+                        print_msg('blockMass: ', blockMass, 'adjratio: ', pastRateAdjRatio, ' eventHorizon: ', eventHorizon)
+                        first = first['header']
+
+        else:
+            # Vertcoin: go back the full period unless it's the first retarget
+            if index == 1:
+                first = self.read_header(0)
+            else:
+                first = self.read_header((index-1)*201-1)
+            last = self.read_header(index*201-1)
+            if last is None:
+                for h in chain:
+                    if h.get('block_height') == index*201-1:
+                        last = h
+
+
+        nActualTimespan = pastTimeActual
+        nTargetTimespan = pastTimeTarget
+        target = pastDiffAvg
+
+        # new target
+        new_target = min( max_target, (target * nActualTimespan)/nTargetTimespan )
+
+        new_bits = self.convbits(new_target)
+
         return new_bits, new_target
-
-
+				
+				
+				
     def request_header(self, i, h, queue):
         print_msg("requesting header %d from %s"%(h, i.server))
         i.send([ ('blockchain.block.get_header',[h])], lambda i,r: queue.put((i,r)))
