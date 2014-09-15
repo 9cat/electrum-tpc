@@ -183,18 +183,41 @@ def KimotoGravityWell(index, chain=[],data=None):
   PastBlocksMax				    = PastSecondsMax / BlocksTargetSpacing;
 
   
-  BlockReadingIndex             = index
-  BlockLastSolvedIndex          = index
+  BlockReadingIndex             = index - 1
+  BlockLastSolvedIndex          = index - 1
   TargetBlocksSpacingSeconds    = BlocksTargetSpacing
   PastRateAdjustmentRatio       = 1.0
   bnProofOfWorkLimit = 0x00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
   
-  last = read_header(BlockLastSolvedIndex)
   
+  
+  if (BlockLastSolvedIndex<=0 or BlockLastSolvedIndex<PastSecondsMin):
+    new_target = bnProofOfWorkLimit
+    new_bits = convbits(new_target)      
+    return new_bits, new_target
+
+  
+  
+  try:
+    last = read_header(BlockLastSolvedIndex)
+  except Exception:
+    for h in chain:
+      if h.get('block_height') == BlockLastSolvedIndex:
+        last = read_header(BlockLastSolvedIndex)
+        break;
+
   for i in xrange(1,int(PastBlocksMax)+1):
     PastBlocksMass=i
-
-    reading = read_header(BlockReadingIndex)
+	
+    try:
+      reading = read_header(BlockReadingIndex)
+    except Exception:
+      for h in chain:
+        if h.get('block_height') == BlockReadingIndex:
+          reading = read_header(BlockReadingIndex)
+          break;
+	
+	
     if (i == 1):
       PastDifficultyAverage=convbignum(reading.get('bits'))
     else:
@@ -212,16 +235,18 @@ def KimotoGravityWell(index, chain=[],data=None):
     
     EventHorizonDeviation       = 1 + (0.7084 * pow(float(PastBlocksMass)/28.2, -1.228))
     EventHorizonDeviationFast   = EventHorizonDeviation
-    EventHorizonDeviationSlow		= 1 / float(EventHorizonDeviation)
+    EventHorizonDeviationSlow		= float(1) / float(EventHorizonDeviation)
     
+    #print_msg ("EventHorizonDeviation=",EventHorizonDeviation,"EventHorizonDeviationFast=",EventHorizonDeviationFast,"EventHorizonDeviationSlow=",EventHorizonDeviationSlow ) 
+	
     if (PastBlocksMass >= PastBlocksMin):
     
       if ((PastRateAdjustmentRatio <= EventHorizonDeviationSlow) or (PastRateAdjustmentRatio >= EventHorizonDeviationFast)):
-        print_msg ("blockreading done")
+        print_msg ("blockreading done PastBlocksMass=",PastBlocksMass)
         break;
          
       if (BlockReadingIndex<1):
-        print_msg ("blockreading=0" )
+        print_msg ("blockreading=0 PastBlocksMass=",PastBlocksMass )
         break
     
        
@@ -232,7 +257,7 @@ def KimotoGravityWell(index, chain=[],data=None):
 	
     BlockReadingIndex = BlockReadingIndex -1;
     #print_msg ("BlockReadingIndex=",BlockReadingIndex )
-    
+  print_msg ("for end: PastBlocksMass=",PastBlocksMass ) 
   bnNew   = PastDifficultyAverage
   if (PastRateActualSeconds != 0 and PastRateTargetSeconds != 0):
     bnNew *= float(PastRateActualSeconds);
@@ -251,15 +276,31 @@ def KimotoGravityWell(index, chain=[],data=None):
         
 chain = [{u'nonce': 3113028288, u'prev_block_hash': u'29f7b686dce9782c287aa8dd3df3fae7fb2d5a346f6af3c5ba877c5554ecf01b', u'timestamp': 1410629659, u'merkle_root': u'4ed5f337786ff1a86e5011e592dc50140887465ccf4bf6f3c1332e55986cf4af', u'block_height': 94907, u'version': 2, u'bits': 503785119}, {u'nonce': 28836352, u'prev_block_hash': u'5b8b7dc53579ddecb3246f0de3be646ea38c0e94fd27b7523228ca6aade4b98f', u'timestamp': 1410629738, u'merkle_root': u'6fcca3b3ab3abc5e65f277d67b56303a7a67d3059d67b37334205b0a426dc669', u'block_height': 94908, u'version': 2, u'bits': 503785079}, {u'nonce': 2620915968, u'prev_block_hash': u'42edc8facd095f49c7be36151591aa6fc02ce9959d4d3b832140047498f57735', u'timestamp': 1410629782, u'merkle_root': u'da088cf38cbaf55a474450ba7676d5a25e0d40ad31f726e5049cbb0ad94cb74b', u'block_height': 94909, u'utxo_root': u'2704ac6cb82bbbe898c626eda2acb6f7b996bd5a645abaad5f1afd8e404e20a6', u'version': 2, u'bits': 503784608}]
         
+        
+        
+height = 92736
+bits, target  = KimotoGravityWell(height) 
+h = read_header(height)
+print_msg("string=",h)
+print_msg("bits", bits , "(", hex(bits),")")
+print_msg("bits.header",  h.get('bits') , "(", hex(h.get('bits')),")")
+print_msg("***********************************************************")        
+
+sys.exit()
 
 for h in chain:
-  height = h.get('block_height')
-  print_msg("height ", height )
-  bits, target  = get_target(height/201, chain)  
-  print_msg("bits", bits)
-  print_msg("bits.header",  h.get('bits'))
-  print_msg("-------------")
+  #height = h.get('block_height')
+  #print_msg("height ", height )
+  #bits, target  = get_target(height/201, chain)  
+  #print_msg("bits", bits)
+  #print_msg("bits.header",  h.get('bits'))
+  #print_msg("-------------")
   bits, target  = KimotoGravityWell(height, chain) 
-  print_msg("bits", bits)
-  print_msg("bits.header",  h.get('bits'))
+  print_msg("bits", bits , "(", hex(bits),")")
+  print_msg("bits.header",  h.get('bits') , "(", hex(h.get('bits')),")")
   print_msg("***********************************************************")
+  
+  
+  
+  
+  
