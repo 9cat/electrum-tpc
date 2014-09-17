@@ -57,7 +57,7 @@ def user_dir():
 def appdata_dir():
     """Find the path to the application data directory; add an electrum folder and return path."""
     if platform.system() == "Windows":
-        return os.path.join(os.environ["APPDATA"], "Electrum-LTC")
+        return os.path.join(os.environ["APPDATA"], "Electrum-TPC")
     elif platform.system() == "Linux":
         return os.path.join(sys.prefix, "share", "electrum-ltc")
     elif (platform.system() == "Darwin" or
@@ -65,7 +65,7 @@ def appdata_dir():
           platform.system() == "OpenBSD" or
           platform.system() == "FreeBSD" or
 	  platform.system() == "NetBSD"):
-        return "/Library/Application Support/Electrum-LTC"
+        return "/Library/Application Support/Electrum-TPC"
     else:
         raise Exception("Unknown system")
 

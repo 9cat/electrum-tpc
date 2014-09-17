@@ -29,7 +29,7 @@ from electrum_ltc.bitcoin import is_valid
 from electrum_ltc import mnemonic, pyqrnative, WalletStorage, Wallet
 
 Gdk.threads_init()
-APP_NAME = "Electrum-LTC"
+APP_NAME = "Electrum-TPC"
 import platform
 MONOSPACE_FONT = 'Lucida Console' if platform.system() == 'Windows' else 'monospace'
 
@@ -464,7 +464,7 @@ class ElectrumWindow:
         self.num_zeros = int(self.config.get('num_zeros',0))
 
         self.window = MyWindow(Gtk.WindowType.TOPLEVEL)
-        title = 'Electrum-LTC ' + self.wallet.electrum_version + '  -  ' + self.config.path
+        title = 'Electrum-TPC ' + self.wallet.electrum_version + '  -  ' + self.config.path
         if not self.wallet.seed: title += ' [seedless]'
         self.window.set_title(title)
         self.window.connect("destroy", Gtk.main_quit)

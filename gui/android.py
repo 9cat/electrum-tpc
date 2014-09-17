@@ -166,7 +166,7 @@ def make_layout(s, scrollable = False):
 
         <TextView
           android:id="@+id/textElectrum"
-          android:text="Electrum-LTC"
+          android:text="Electrum-TPC"
           android:textSize="7pt"
           android:textColor="#ff4444ff"
           android:gravity="left"
@@ -453,7 +453,7 @@ def pay_to(recipient, amount, fee, label):
     else:
         password = None
 
-    droid.dialogCreateSpinnerProgress("Electrum-LTC", "signing transaction...")
+    droid.dialogCreateSpinnerProgress("Electrum-TPC", "signing transaction...")
     droid.dialogShow()
 
     try:
@@ -1009,7 +1009,7 @@ class ElectrumGui:
     def restore_wallet(self):
 
         msg = "recovering wallet..."
-        droid.dialogCreateSpinnerProgress("Electrum-LTC", msg)
+        droid.dialogCreateSpinnerProgress("Electrum-TPC", msg)
         droid.dialogShow()
 
         wallet.restore(lambda x: None)

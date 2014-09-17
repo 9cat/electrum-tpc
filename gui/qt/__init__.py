@@ -79,7 +79,7 @@ class ElectrumGui:
         m.addAction(_("Show/Hide"), self.show_or_hide)
         m.addAction(_("Dark/Light"), self.toggle_tray_icon)
         m.addSeparator()
-        m.addAction(_("Exit Electrum-LTC"), self.close)
+        m.addAction(_("Exit Electrum-TPC"), self.close)
         self.tray.setContextMenu(m)
 
     def toggle_tray_icon(self):
@@ -160,7 +160,7 @@ class ElectrumGui:
 
         if amount:
             try:
-                if self.main_window.base_unit() == 'mLTC': 
+                if self.main_window.base_unit() == 'mTPC': 
                     amount = str( 1000* Decimal(amount))
                 else: 
                     amount = str(Decimal(amount))
@@ -213,7 +213,7 @@ class ElectrumGui:
         self.dark_icon = self.config.get("dark_icon", False)
         icon = QIcon(":icons/electrum_dark_icon.png") if self.dark_icon else QIcon(':icons/electrum_light_icon.png')
         self.tray = QSystemTrayIcon(icon, None)
-        self.tray.setToolTip('Electrum-LTC')
+        self.tray.setToolTip('Electrum-TPC')
         self.tray.activated.connect(self.tray_activated)
         self.build_tray_menu()
         self.tray.show()

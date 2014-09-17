@@ -23,8 +23,8 @@ data_files = []
 if (len(sys.argv) > 1 and (sys.argv[1] == "sdist")) or (platform.system() != 'Windows' and platform.system() != 'Darwin'):
     print "Including all files"
     data_files += [
-        (os.path.join(usr_share, 'applications/'), ['electrum-ltc.desktop']),
-        (os.path.join(usr_share, 'app-install', 'icons/'), ['icons/electrum-ltc.png'])
+        (os.path.join(usr_share, 'applications/'), ['electrum-tpc.desktop']),
+        (os.path.join(usr_share, 'app-install', 'icons/'), ['icons/electrum-tpc.png'])
     ]
     if not os.path.exists('locale'):
         os.mkdir('locale')
@@ -34,7 +34,7 @@ if (len(sys.argv) > 1 and (sys.argv[1] == "sdist")) or (platform.system() != 'Wi
 
 appdata_dir = util.appdata_dir()
 if not os.access(appdata_dir, os.W_OK):
-    appdata_dir = os.path.join(usr_share, "electrum-ltc")
+    appdata_dir = os.path.join(usr_share, "electrum-tpc")
 
 data_files += [
     (appdata_dir, ["data/README"]),
@@ -54,7 +54,7 @@ data_files += [
 
 
 setup(
-    name="Electrum-LTC",
+    name="Electrum-TPC",
     version=version.ELECTRUM_VERSION,
     install_requires=['slowaes', 'ecdsa>=0.9', 'ltc_scrypt'],
     package_dir={
@@ -62,7 +62,7 @@ setup(
         'electrum_ltc_gui': 'gui',
         'electrum_ltc_plugins': 'plugins',
     },
-    scripts=['electrum-ltc'],
+    scripts=['electrum-tpc'],
     data_files=data_files,
     py_modules=[
         'electrum_ltc.account',
@@ -113,10 +113,10 @@ setup(
         'electrum_ltc_plugins.qrscanner',
         'electrum_ltc_plugins.virtualkeyboard',
     ],
-    description="Lightweight Litecoin Wallet",
+    description="Lightweight Templecoin Wallet",
     author="ecdsa",
     author_email="ecdsa@github",
     license="GNU GPLv3",
-    url="http://electrum-ltc.org",
+    url="http://electrum.templecoin.org",
     long_description="""Lightweight Litecoin Wallet"""
 )
