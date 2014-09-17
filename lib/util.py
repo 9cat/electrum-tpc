@@ -59,7 +59,7 @@ def appdata_dir():
     if platform.system() == "Windows":
         return os.path.join(os.environ["APPDATA"], "Electrum-TPC")
     elif platform.system() == "Linux":
-        return os.path.join(sys.prefix, "share", "electrum-ltc")
+        return os.path.join(sys.prefix, "share", "electrum-tpc")
     elif (platform.system() == "Darwin" or
           platform.system() == "DragonFly" or
           platform.system() == "OpenBSD" or

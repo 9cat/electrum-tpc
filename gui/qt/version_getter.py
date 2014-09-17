@@ -90,7 +90,7 @@ class UpdateLabel(QLabel):
         self.dialog.done(0)
   
     def open_website(self):
-        webbrowser.open("http://electrum-ltc.org/")
+        webbrowser.open("http://electrum.templecoin.org/")
         self.dialog.done(0)
 
     def mouseReleaseEvent(self, event):

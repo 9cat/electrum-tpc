@@ -1,0 +1,17 @@
+# If you want electrum to appear in a linux app launcher ("start menu"), install this by doing:
+# sudo desktop-file-install electrum.desktop
+
+[Desktop Entry]
+Comment=Lightweight Templecoin Client
+Exec=electrum-tpc %u
+GenericName[en_US]=Electrum-TPC
+GenericName=Electrum-TPC
+Icon=/usr/share/app-install/icons/electrum-tpc.png
+Name[en_US]=Electrum Templecoin Wallet
+Name=Electrum Templecoin Wallet
+Categories=Network;
+StartupNotify=false
+Terminal=false
+Type=Application
+MimeType=x-scheme-handler/templecoin
+

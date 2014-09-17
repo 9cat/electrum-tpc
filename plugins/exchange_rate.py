@@ -130,7 +130,7 @@ class Exchanger(threading.Thread):
         quote_currencies = {"USD": 0.0}
         for cur in quote_currencies:
             try:
-                quote_currencies[cur] = self.get_json('api.bitfinex.com', "/v1/pubticker/ltc" + cur.lower())["last_price"]
+                quote_currencies[cur] = self.get_json('api.bitfinex.com', "/v1/pubticker/tpc" + cur.lower())["last_price"]
             except Exception:
                 pass
         with self.lock:
