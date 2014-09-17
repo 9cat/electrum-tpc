@@ -146,22 +146,23 @@ class Blockchain(threading.Thread):
 
 
 
-    def verify_chunk(self, index, hexdata):
+    def verify_chunk(self, height, index,  hexdata):
         data = hexdata.decode('hex')
-        height = index*2016
+        #height = index*2016
         num = len(data)/80
 
         if index == 0:  
             previous_hash = ("0"*64)
         else:
-            prev_header = self.read_header(index*2016-1)
+            prev_header = self.read_header(height-1)
             if prev_header is None: raise
             previous_hash = self.hash_header(prev_header)
        
-        bits, target = self.get_target(index)
+        bits, target = self.KimotoGravityWell(height)
        
         for i in range(num):
-            height = index*2016 + i
+            #height = index*2016 + i
+            height = height + i
             raw_header = data[i*80:(i+1)*80]
             header = self.header_from_string(raw_header)
             _hash = self.pow_hash_header(header)
@@ -297,8 +298,8 @@ class Blockchain(threading.Thread):
         return c + MM * i				
 				
 
-    def KimotoGravityWell(self, index, chain=[],data=None):	
-	  print_msg ("index=",index,"chain=", chain, "data=", data)
+    def KimotoGravityWell(self, height, chain=[],data=None):	
+	  print_msg ("height=",height,"chain=", chain, "data=", data)
 	  BlocksTargetSpacing			= 1 * 60; # 1 minute
 	  TimeDaySeconds				= 60 * 60 * 24;
 	  PastSecondsMin				= TimeDaySeconds * 0.01;
@@ -307,8 +308,8 @@ class Blockchain(threading.Thread):
 	  PastBlocksMax				    = PastSecondsMax / BlocksTargetSpacing;
 
 	  
-	  BlockReadingIndex             = index - 1
-	  BlockLastSolvedIndex          = index - 1
+	  BlockReadingIndex             = height - 1
+	  BlockLastSolvedIndex          = height - 1
 	  TargetBlocksSpacingSeconds    = BlocksTargetSpacing
 	  PastRateAdjustmentRatio       = 1.0
 	  bnProofOfWorkLimit = 0x00000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
@@ -324,12 +325,20 @@ class Blockchain(threading.Thread):
 	  
 	  try:
 		last = self.read_header(BlockLastSolvedIndex)
+		print_msg("read from local")
 	  except Exception:
+		print_msg("read from chain")
 		for h in chain:
 		  if h.get('block_height') == BlockLastSolvedIndex:
+			print_msg("get block from chain")
 			last = h
 			break;
-
+	  if (last==None):
+		  for h in chain:
+			if h.get('block_height') == BlockReadingIndex:
+			  #print_msg("get block from chain")
+			  last = h
+			  break;  
             
             
 	  for i in xrange(1,int(PastBlocksMax)+1):
@@ -337,15 +346,31 @@ class Blockchain(threading.Thread):
 		
 		try:
 		  reading = self.read_header(BlockReadingIndex)
+		  #print_msg("read from local")
 		except Exception:
+		  #print_msg("read from chain")
 		  for h in chain:
 			if h.get('block_height') == BlockReadingIndex:
+			  #print_msg("get block from chain")
 			  reading = h
 			  break;
-		
+        
+		if (reading==None):
+		  for h in chain:
+			if h.get('block_height') == BlockReadingIndex:
+			  #print_msg("get block from chain")
+			  reading = h
+			  break;        
+        
+        
+        
+		if (reading==None or last == None):
+		  print_msg("error:reading==None or last == None ",reading,last);
+		  return 0x1e0ffff0, 0x00000FFFF0000000000000000000000000000000000000000000000000000000
+        
 		#print_msg ("last=",last)		
 		if (i == 1):
-		  #print_msg ("reading=",reading)
+		  print_msg ("reading=",reading)
 		  PastDifficultyAverage=self.convbignum(reading.get('bits'))
 		else:
 		  PastDifficultyAverage= float((self.convbignum(reading.get('bits')) - PastDifficultyAveragePrev) / float(i)) + PastDifficultyAveragePrev;
@@ -600,13 +625,14 @@ class Blockchain(threading.Thread):
         while n < max_index + 1:
             print_msg( "Requesting chunk :", n )
             r = i.synchronous_get([ ('blockchain.block.get_chunk',[n])])[0]
+            #print_msg('blockchain.block.get_chunk=',r)
             if not r: 
                 continue
             try:
-                self.verify_chunk(n, r)
+                self.verify_chunk(height+n,n, r)
                 n = n + 1
             except Exception:
-                print_msg('Verify chunk failed!')
+                print_msg('Verify chunk failed!',  sys.exc_info()[0])
                 n = n - 1
                 if n < 0:
                     return False
