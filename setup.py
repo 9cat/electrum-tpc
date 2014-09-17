@@ -118,5 +118,5 @@ setup(
     author_email="ecdsa@github",
     license="GNU GPLv3",
     url="http://electrum.templecoin.org",
-    long_description="""Lightweight Litecoin Wallet"""
+    long_description="""Lightweight Templecoin Wallet"""
 )
