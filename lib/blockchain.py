@@ -21,6 +21,7 @@ import threading, time, Queue, os, sys, shutil
 from math import pow as dec_pow
 from util import user_dir, appdata_dir, print_msg, print_msg
 from bitcoin import *
+import sys, traceback
 
 try:
     from ltc_scrypt import getPoWHash
@@ -145,25 +146,26 @@ class Blockchain(threading.Thread):
         return True
 
 
-
-    def verify_chunk(self, height, index,  hexdata):
+#1
+    def verify_chunk(self, index,  hexdata):
         data = hexdata.decode('hex')
-        #height = index*2016
+        height = index*2016
         num = len(data)/80
-
+        print_msg( "height=",height,"index=", index,"num=",num)
         if index == 0:  
             previous_hash = ("0"*64)
         else:
             prev_header = self.read_header(height-1)
-            if prev_header is None: raise
+            #print_msg("prev_header=",prev_header);
+            if prev_header is None: raise Exception('prev_header==None')
             previous_hash = self.hash_header(prev_header)
        
         bits, target = self.KimotoGravityWell(height)
-       
+        #num=1
         for i in range(num):
-            #height = index*2016 + i
-            height = height + i
-            raw_header = data[i*80:(i+1)*80]
+            height = index*2016 + i
+            #height = height + i
+            raw_header = data[i*80:(i-1)*80]
             header = self.header_from_string(raw_header)
             _hash = self.pow_hash_header(header)
             			
@@ -171,21 +173,24 @@ class Blockchain(threading.Thread):
            # print_msg("bits.header",  header.get('bits') , "(", hex(header.get('bits')),")")
            # print_msg("previous_hash == header.get('prev_block_hash')", (previous_hash == header.get('prev_block_hash')))
             if (bits != header.get('bits')):
-              print_msg("previous_hash == header.get('prev_block_hash')", (previous_hash == header.get('prev_block_hash')))
-              print_msg("header=",header)
-              print_msg("bits", bits , "(", hex(bits),")")          
-              print_msg("height=",height,"bits == header.get('bits')", bits == header.get('bits'))
-              print_msg("bits.header",  header.get('bits') , "(", hex(header.get('bits')),")")
+              print_msg("(local)previous_hash =", previous_hash)
+              print_msg("(network)header.get('prev_block_hash')=", header.get('prev_block_hash'))
+              print_msg("header(",height,")=",header)
+              print_msg("(local)  bits", bits , "(", hex(bits),")")          
+              #print_msg("height=",height,"bits == header.get('bits')", bits == header.get('bits'))
+              print_msg("(network)bits.header",  header.get('bits') , "(", hex(header.get('bits')),")")
               print_msg("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
             assert previous_hash == header.get('prev_block_hash')
             assert bits == header.get('bits')
             assert int('0x'+_hash,16) < target
-
+            
             previous_header = header
             previous_hash = self.hash_header(header)
-
+            print_msg("PASS=(",height,")=$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+        print_msg("to save chunk!")    
         self.save_chunk(index, data)
-        print_msg("validated chunk %d"%height)
+        #print_error("validated chunk %d"%height)
+        print_msg("validated chunk =", height)
 
         
 
@@ -370,7 +375,7 @@ class Blockchain(threading.Thread):
         
 		#print_msg ("last=",last)		
 		if (i == 1):
-		  print_msg ("reading=",reading)
+		  print_msg ("reading(",BlockReadingIndex,")=",reading)
 		  PastDifficultyAverage=self.convbignum(reading.get('bits'))
 		else:
 		  PastDifficultyAverage= float((self.convbignum(reading.get('bits')) - PastDifficultyAveragePrev) / float(i)) + PastDifficultyAveragePrev;
@@ -623,16 +628,15 @@ class Blockchain(threading.Thread):
         max_index = (height + 1)/2016
         n = min_index
         while n < max_index + 1:
-            print_msg( "Requesting chunk :", n )
+            print_error( "Requesting chunk:", n )
             r = i.synchronous_get([ ('blockchain.block.get_chunk',[n])])[0]
-            #print_msg('blockchain.block.get_chunk=',r)
             if not r: 
                 continue
             try:
-                self.verify_chunk(height+n,n, r)
+                self.verify_chunk(n, r)
                 n = n + 1
             except Exception:
-                print_msg('Verify chunk failed!',  sys.exc_info()[0])
+                print_error('Verify chunk failed!')
                 n = n - 1
                 if n < 0:
                     return False
