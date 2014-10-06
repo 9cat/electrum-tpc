@@ -163,30 +163,36 @@ class Blockchain(threading.Thread):
         bits, target = self.KimotoGravityWell(height)
         #num=1
         for i in range(num):
+            print_msg("******************************************************i=",i)
             height = index*2016 + i
             #height = height + i
-            raw_header = data[i*80:(i-1)*80]
+            raw_header = data[(i)*80:(i+1)*80]            
             header = self.header_from_string(raw_header)
+            print_msg("header test!") 
             _hash = self.pow_hash_header(header)
             			
            # print_msg("bits", bits , "(", hex(bits),")")
            # print_msg("bits.header",  header.get('bits') , "(", hex(header.get('bits')),")")
            # print_msg("previous_hash == header.get('prev_block_hash')", (previous_hash == header.get('prev_block_hash')))
+            #print_msg("before if!") 
+            
             if (bits != header.get('bits')):
               print_msg("(local)previous_hash =", previous_hash)
               print_msg("(network)header.get('prev_block_hash')=", header.get('prev_block_hash'))
-              print_msg("header(",height,")=",header)
+              print_msg("(network)(",height,")=",header)
               print_msg("(local)  bits", bits , "(", hex(bits),")")          
               #print_msg("height=",height,"bits == header.get('bits')", bits == header.get('bits'))
               print_msg("(network)bits.header",  header.get('bits') , "(", hex(header.get('bits')),")")
               print_msg("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            print_msg("before assert!") 
             assert previous_hash == header.get('prev_block_hash')
             assert bits == header.get('bits')
             assert int('0x'+_hash,16) < target
-            
+            print_msg("after assert!") 
             previous_header = header
             previous_hash = self.hash_header(header)
             print_msg("PASS=(",height,")=$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$")
+            
         print_msg("to save chunk!")    
         self.save_chunk(index, data)
         #print_error("validated chunk %d"%height)
@@ -304,7 +310,7 @@ class Blockchain(threading.Thread):
 				
 
     def KimotoGravityWell(self, height, chain=[],data=None):	
-	  print_msg ("height=",height,"chain=", chain, "data=", data)
+	  #print_msg ("height=",height,"chain=", chain, "data=", data)
 	  BlocksTargetSpacing			= 1 * 60; # 1 minute
 	  TimeDaySeconds				= 60 * 60 * 24;
 	  PastSecondsMin				= TimeDaySeconds * 0.01;
@@ -420,7 +426,7 @@ class Blockchain(threading.Thread):
 		#print_msg ("BlockReadingIndex=",BlockReadingIndex )
 		
 		
-	  print_msg ("for end: PastBlocksMass=",PastBlocksMass ) 
+	  #print_msg ("for end: PastBlocksMass=",PastBlocksMass ) 
 	  bnNew   = PastDifficultyAverage
 	  if (PastRateActualSeconds != 0 and PastRateTargetSeconds != 0):
 		bnNew *= float(PastRateActualSeconds);
@@ -434,7 +440,7 @@ class Blockchain(threading.Thread):
 	  new_bits = self.convbits(new_target)
 
 	  #print_msg("bits", new_bits , "(", hex(new_bits),")")
-	  print_msg ("PastRateAdjustmentRatio=",PastRateAdjustmentRatio,"EventHorizonDeviationSlow",EventHorizonDeviationSlow,"PastSecondsMin=",PastSecondsMin,"PastSecondsMax=",PastSecondsMax,"PastBlocksMin=",PastBlocksMin,"PastBlocksMax=",PastBlocksMax)    
+	 #print_msg ("PastRateAdjustmentRatio=",PastRateAdjustmentRatio,"EventHorizonDeviationSlow",EventHorizonDeviationSlow,"PastSecondsMin=",PastSecondsMin,"PastSecondsMax=",PastSecondsMax,"PastBlocksMin=",PastBlocksMin,"PastBlocksMax=",PastBlocksMax)    
 	  
 
 

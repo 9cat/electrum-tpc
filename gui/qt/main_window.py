@@ -193,7 +193,7 @@ class ElectrumWindow(QMainWindow):
         self.accounts_expanded = self.wallet.storage.get('accounts_expanded',{})
         self.current_account = self.wallet.storage.get("current_account", None)
 
-        title = 'Electrum-TPC ' + self.wallet.electrum_version + '  -  ' + self.wallet.storage.path
+        title = 'Electrum-TPC ' + self.wallet.electrum_version + '  $  ' + self.wallet.storage.path
         if self.wallet.is_watching_only(): title += ' [%s]' % (_('watching only'))
         self.setWindowTitle( title )
         self.update_wallet()
@@ -480,9 +480,7 @@ class ElectrumWindow(QMainWindow):
         if be == 'explorer.templecoin.com':
             block_explorer = 'http://explorer.templecoin.com/tx/'
         elif be == 'explorer.templecoin.org':
-            block_explorer = 'http://explorer.templecoin.org/tx/'
-        elif be == 'Blockr.io':
-            block_explorer = 'https://tpc.blockr.io/tx/info/'
+            block_explorer = 'http://explorer.templecoin.org/tx/'     
         if not item: return
         tx_hash = str(item.data(0, Qt.UserRole).toString())
         if not tx_hash: return

@@ -7,7 +7,11 @@ from blockchain import Blockchain
 DEFAULT_PORTS = {'t':'52301', 's':'52302', 'h':'8181', 'g':'8182'}
 
 DEFAULT_SERVERS = {
-    't.9mmo.com': DEFAULT_PORTS,
+    '108.61.191.77': DEFAULT_PORTS,    
+    'mc.templecoin.org': DEFAULT_PORTS,
+    'jp.templecoin.org': DEFAULT_PORTS,
+    'cn.templecoin.org': DEFAULT_PORTS,    
+    'us.templecoin.org': DEFAULT_PORTS,
 }
 
 
